@@ -80,7 +80,8 @@ fetch_latest_release_tag() {
         [ -n "$tag" ] && echo "$tag" && return
     fi
 
-    # 方式二：从 GitHub API 获取（无需本地仓库）
+    # 方式二：从 GitHub API 获取（无需本地仓库，可通过 ZH_CN_NO_GITHUB_FALLBACK=1 禁用）
+    [ "${ZH_CN_NO_GITHUB_FALLBACK:-0}" = "1" ] && return
     local repo_url="https://api.github.com/repos/KongBai1145/claude-code-zh-cn/releases/latest"
     if command -v curl &>/dev/null; then
         local tag

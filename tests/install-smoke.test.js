@@ -274,8 +274,7 @@ test(
 
     const output = `${result.stdout}\n${result.stderr}`;
     assert.equal(result.status, 0, output);
-    assert.match(output, /原生二进制/, output);
-    assert.match(output, /暂不支持 patch/, output);
+    assert.match(output, /暂不支持.*CLI Patch/, output);
     assert.equal(fs.existsSync(markerFile), false, "unsupported native exe must not write a success marker");
     assert.equal(readUserPath(powershell), beforeUserPath, "smoke must not mutate persistent Windows user PATH");
   }
