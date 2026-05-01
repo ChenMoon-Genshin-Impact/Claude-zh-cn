@@ -25,7 +25,7 @@ $LauncherPs1File = "$LauncherBinDir\claude.ps1"
 
 if (-not $SkipBanner) {
     Write-Host ""
-    Write-Host "=== Claude Code 中文本地化插件 卸载 ===" -ForegroundColor Blue
+    Write-Host "=== Claude Code 界面汉化插件 卸载 ===" -ForegroundColor Blue
     Write-Host ""
 }
 

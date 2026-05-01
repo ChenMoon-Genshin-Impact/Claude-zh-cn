@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# quick-install.sh - 一键安装 Claude Code 中文本地化插件
+# quick-install.sh - 一键安装 Claude Code 界面汉化插件
 # 用法: curl -fsSL https://raw.githubusercontent.com/KongBai1145/claude-code-zh-cn/main/quick-install.sh | bash
 
 set -euo pipefail
@@ -78,7 +78,7 @@ check_claude_installed() {
         echo ""
         # 非 TTY 环境直接继续（curl | bash 场景）
         if [ -t 0 ]; then
-            read -p "是否继续安装中文本地化插件？(y/N) " -n 1 -r
+            read -p "是否继续安装界面汉化插件？(y/N) " -n 1 -r
             echo ""
             if [[ ! $REPLY =~ ^[Yy]$ ]]; then
                 exit 0
@@ -90,7 +90,7 @@ check_claude_installed() {
 # 主安装流程
 main() {
     echo ""
-    info "=== Claude Code 中文本地化插件 一键安装 ==="
+    info "=== Claude Code 界面汉化插件 一键安装 ==="
     echo ""
 
     # 检查依赖

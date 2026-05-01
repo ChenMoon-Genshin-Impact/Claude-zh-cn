@@ -40,9 +40,9 @@ function banner {
     if ($SkipBanner) { return }
     Write-Host ""
     if ($UpdateOnly) {
-        Write-CN "=== Claude Code 中文本地化插件 更新 ===" Blue
+        Write-CN "=== Claude Code 界面汉化插件 更新 ===" Blue
     } else {
-        Write-CN "=== Claude Code 中文本地化插件 安装 ===" Blue
+        Write-CN "=== Claude Code 界面汉化插件 安装 ===" Blue
     }
     Write-Host ""
 }

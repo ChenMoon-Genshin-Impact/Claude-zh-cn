@@ -2,7 +2,7 @@
 
 # claude-code-zh-cn
 
-**Claude Code 简体中文本地化插件**
+**Claude Code 界面汉化插件**
 
 让终端里的 AI 编程助手说中文 🇨🇳
 

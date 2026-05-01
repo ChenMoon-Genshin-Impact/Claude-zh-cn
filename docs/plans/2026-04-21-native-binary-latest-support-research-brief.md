@@ -14,7 +14,7 @@
 
 ## 项目背景
 
-`claude-code-zh-cn` 是 Claude Code 中文本地化插件。
+`claude-code-zh-cn` 是 Claude Code 界面汉化插件。
 
 旧版本 Claude Code 的 npm 包里有 `package/cli.js`，插件通过 `patch-cli.js` 替换其中的硬编码英文 UI 文案。
 

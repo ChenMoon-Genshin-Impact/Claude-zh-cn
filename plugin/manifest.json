@@ -1,7 +1,7 @@
 {
   "name": "claude-code-zh-cn",
   "version": "2.4.0",
-  "description": "Claude Code 中文本地化插件 — 简体中文支持",
+  "description": "Claude Code 界面汉化插件 — 简体中文 UI 翻译",
   "author": "KongBai1145",
   "license": "MIT",
   "hooks": "hooks.json",

@@ -18,7 +18,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo -e "${BLUE}=== Claude Code 中文本地化插件 卸载 ===${NC}"
+echo -e "${BLUE}=== Claude Code 界面汉化插件 卸载 ===${NC}"
 echo ""
 
 list_profile_targets() {

@@ -1,6 +1,6 @@
 # claude-code-zh-cn
 
-Claude Code CLI 中文本地化插件。
+Claude Code CLI 界面汉化插件。
 
 ## 项目结构
 

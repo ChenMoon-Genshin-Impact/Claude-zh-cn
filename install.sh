@@ -44,9 +44,9 @@ print_banner() {
     fi
 
     if [ "$UPDATE_ONLY" = true ]; then
-        echo -e "${BLUE}=== Claude Code 中文本地化插件 更新 ===${NC}"
+        echo -e "${BLUE}=== Claude Code 界面汉化插件 更新 ===${NC}"
     else
-        echo -e "${BLUE}=== Claude Code 中文本地化插件 安装 ===${NC}"
+        echo -e "${BLUE}=== Claude Code 界面汉化插件 安装 ===${NC}"
     fi
     echo ""
 }
@@ -716,7 +716,7 @@ run_install_wizard() {
     fi
 
     echo ""
-    echo -e "${BLUE}欢迎使用 Claude Code 中文本地化插件安装向导${NC}"
+    echo -e "${BLUE}欢迎使用 Claude Code 界面汉化插件安装向导${NC}"
     echo ""
     echo "本向导将帮助您完成安装配置。"
     echo ""
