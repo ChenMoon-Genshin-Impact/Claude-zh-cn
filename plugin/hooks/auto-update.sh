@@ -25,8 +25,6 @@ should_check_for_update() {
     local interval now last
 
     [ "${ZH_CN_DISABLE_AUTO_UPDATE:-0}" = "1" ] && return 1
-    [ -n "$source_repo" ] || return 1
-    [ -d "$source_repo/.git" ] || return 1
 
     interval="$UPDATE_CHECK_INTERVAL_SECONDS"
     case "$interval" in
@@ -55,29 +53,44 @@ should_check_for_update() {
 fetch_latest_release_tag() {
     local source_repo="$1"
 
-    if command -v timeout &>/dev/null; then
-        GIT_TERMINAL_PROMPT=0 timeout 15 git -C "$source_repo" fetch --tags --quiet >/dev/null 2>&1 || true
-    else
-        # macOS fallback: background + wait with 15s limit
-        local pid
-        GIT_TERMINAL_PROMPT=0 git -C "$source_repo" fetch --tags --quiet >/dev/null 2>&1 &
-        pid=$!
-        local waited=0
-        while [ $waited -lt 15 ]; do
-            if ! kill -0 "$pid" 2>/dev/null; then
+    # 方式一：从本地仓库获取（如果存在）
+    if [ -n "$source_repo" ] && [ -d "$source_repo/.git" ]; then
+        if command -v timeout &>/dev/null; then
+            GIT_TERMINAL_PROMPT=0 timeout 15 git -C "$source_repo" fetch --tags --quiet >/dev/null 2>&1 || true
+        else
+            local pid
+            GIT_TERMINAL_PROMPT=0 git -C "$source_repo" fetch --tags --quiet >/dev/null 2>&1 &
+            pid=$!
+            local waited=0
+            while [ $waited -lt 15 ]; do
+                if ! kill -0 "$pid" 2>/dev/null; then
+                    wait "$pid" 2>/dev/null || true
+                    break
+                fi
+                sleep 1
+                waited=$((waited + 1))
+            done
+            if kill -0 "$pid" 2>/dev/null; then
+                kill "$pid" 2>/dev/null || true
                 wait "$pid" 2>/dev/null || true
-                break
             fi
-            sleep 1
-            waited=$((waited + 1))
-        done
-        if kill -0 "$pid" 2>/dev/null; then
-            kill "$pid" 2>/dev/null || true
-            wait "$pid" 2>/dev/null || true
         fi
+        local tag
+        tag="$(git -C "$source_repo" tag -l 'v*' --sort=-version:refname | head -1)"
+        [ -n "$tag" ] && echo "$tag" && return
     fi
 
-    git -C "$source_repo" tag -l 'v*' --sort=-version:refname | head -1
+    # 方式二：从 GitHub API 获取（无需本地仓库）
+    local repo_url="https://api.github.com/repos/KongBai1145/claude-code-zh-cn/releases/latest"
+    if command -v curl &>/dev/null; then
+        local tag
+        tag="$(curl -s "$repo_url" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"v\?\([^"]*\)".*/v\1/' | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$')"
+        [ -n "$tag" ] && echo "$tag" && return
+    elif command -v wget &>/dev/null; then
+        local tag
+        tag="$(wget -qO- "$repo_url" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"v\?\([^"]*\)".*/v\1/' | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$')"
+        [ -n "$tag" ] && echo "$tag" && return
+    fi
 }
 
 export_release_to_staging() {
@@ -86,8 +99,22 @@ export_release_to_staging() {
     local staging_dir="$3"
 
     mkdir -p "$staging_dir"
-    GIT_TERMINAL_PROMPT=0 git -C "$source_repo" archive --format=tar "$latest_tag" install.sh install.ps1 compute-patch-revision.sh settings-overlay.json verbs tips plugin 2>/dev/null \
-        | tar -xf - -C "$staging_dir" 2>/dev/null
+
+    # 方式一：从本地仓库导出（如果存在）
+    if [ -n "$source_repo" ] && [ -d "$source_repo/.git" ]; then
+        GIT_TERMINAL_PROMPT=0 git -C "$source_repo" archive --format=tar "$latest_tag" install.sh install.ps1 compute-patch-revision.sh settings-overlay.json verbs tips plugin 2>/dev/null \
+            | tar -xf - -C "$staging_dir" 2>/dev/null && return 0
+    fi
+
+    # 方式二：从 GitHub 下载（无需本地仓库）
+    local download_url="https://github.com/KongBai1145/claude-code-zh-cn/archive/refs/tags/${latest_tag}.tar.gz"
+    if command -v curl &>/dev/null; then
+        curl -sL "$download_url" 2>/dev/null | tar -xzf - -C "$staging_dir" --strip-components=1 2>/dev/null && return 0
+    elif command -v wget &>/dev/null; then
+        wget -qO- "$download_url" 2>/dev/null | tar -xzf - -C "$staging_dir" --strip-components=1 2>/dev/null && return 0
+    fi
+
+    return 1
 }
 
 validate_staging_release() {
