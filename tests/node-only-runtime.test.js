@@ -24,7 +24,7 @@ test("install.sh works without python3 when node is available", () => {
   const binDir = path.join(tmp, "bin");
 
   fs.mkdirSync(home, { recursive: true });
-  linkCommands(binDir, ["node", "cp", "mkdir", "find", "chmod", "cat", "sed", "head", "which", "date", "tr", "dirname"]);
+  linkCommands(binDir, ["node", "npm", "cp", "mkdir", "find", "chmod", "cat", "sed", "head", "which", "date", "tr", "dirname"]);
 
   const result = spawnSync("/bin/bash", [path.join(repoRoot, "install.sh")], {
     cwd: repoRoot,

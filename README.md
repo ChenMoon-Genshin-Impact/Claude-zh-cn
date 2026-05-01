@@ -43,9 +43,9 @@ curl -fsSL https://raw.githubusercontent.com/KongBai1145/claude-code-zh-cn/main/
 | `npm install -g @anthropic-ai/claude-code@2.1.112` | ✅ 完整支持 | 一键安装即可 |
 | `curl -fsSL https://claude.ai/install.sh \| bash -s 2.1.112` | ✅ 支持 | 需要 `npm install -g node-lief` |
 | macOS 官方安装器 (2.1.110-2.1.112) | ✅ 支持 | 需要 `npm install -g node-lief` |
-| macOS native (2.1.113-2.1.126) | ✅ 支持 | 需要 `npm install -g node-lief` |
+| macOS native (2.1.113-2.1.126) | ✅ experimental | 需要 `npm install -g node-lief` |
 | `curl -fsSL https://claude.ai/install.sh \| bash` (Linux) | ✅ 支持 | 需要 `npm install -g node-lief` |
-| Linux native (2.1.126) | ✅ 支持 | 需要 `npm install -g node-lief` |
+| Linux native (2.1.126) | ✅ experimental | 需要 `npm install -g node-lief` |
 | Windows PowerShell | ✅ 支持 | 使用 `install.ps1` |
 | 其他版本 | ⚠️ 部分支持 | 设置和 Hook 生效，UI 翻译可能不完整 |
 
@@ -184,7 +184,7 @@ macOS、Linux、Windows（PowerShell 或 WSL）。需要 Node.js。
 | 安装方式 | 需要 git clone | **一键 curl 安装** |
 | 依赖管理 | 手动安装 | **自动检测并提示** |
 | 安装引导 | 无 | **交互式向导** |
-| 版本支持 | macOS 2.1.123 | **macOS 2.1.126 + Linux** |
+| 版本覆盖 | macOS 2.1.123 | **macOS 2.1.126 + Linux experimental** |
 
 ---
 

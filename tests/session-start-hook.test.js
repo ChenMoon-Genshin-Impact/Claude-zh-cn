@@ -9,6 +9,24 @@ const { execFileSync, spawnSync } = require("node:child_process");
 const repoRoot = path.resolve(__dirname, "..");
 const hookPath = path.join(repoRoot, "plugin", "hooks", "session-start");
 
+function createHookDeps(pluginRoot) {
+  const hooksDir = path.join(pluginRoot, "hooks");
+  const libDir = path.join(pluginRoot, "lib");
+  fs.mkdirSync(hooksDir, { recursive: true });
+  fs.mkdirSync(libDir, { recursive: true });
+
+  // Copy real files from repo
+  for (const [src, dst] of [
+    [path.join(repoRoot, "plugin", "lib", "common.sh"), path.join(libDir, "common.sh")],
+    [path.join(repoRoot, "plugin", "hooks", "auto-update.sh"), path.join(hooksDir, "auto-update.sh")],
+    [path.join(repoRoot, "plugin", "hooks", "auto-repatch.sh"), path.join(hooksDir, "auto-repatch.sh")],
+  ]) {
+    if (fs.existsSync(src)) {
+      fs.copyFileSync(src, dst);
+    }
+  }
+}
+
 function copyTree(src, dst) {
   const stat = fs.statSync(src);
   if (stat.isDirectory()) {
@@ -126,6 +144,7 @@ test("session-start re-patches when plugin changed even if Claude Code version i
   const invokedFile = path.join(tmp, "patch-invoked");
 
   fs.mkdirSync(pluginRoot, { recursive: true });
+  createHookDeps(pluginRoot);
   fs.mkdirSync(fakeBin, { recursive: true });
   fs.mkdirSync(path.dirname(cliFile), { recursive: true });
 
@@ -175,6 +194,7 @@ test("session-start does not fall back to npm patching when helper reports unkno
   const invokedFile = path.join(tmp, "patch-invoked");
 
   fs.mkdirSync(pluginRoot, { recursive: true });
+  createHookDeps(pluginRoot);
   fs.mkdirSync(fakeBin, { recursive: true });
   fs.mkdirSync(path.dirname(cliFile), { recursive: true });
 
@@ -236,6 +256,7 @@ test("session-start honors ZH_CN_REAL_CLAUDE when launcher is first on PATH", ()
   const invokedFile = path.join(tmp, "patch-invoked");
 
   fs.mkdirSync(pluginRoot, { recursive: true });
+  createHookDeps(pluginRoot);
   fs.mkdirSync(launcherBin, { recursive: true });
   fs.mkdirSync(path.dirname(cliFile), { recursive: true });
   fs.mkdirSync(path.dirname(realClaude), { recursive: true });
@@ -286,6 +307,7 @@ printf 'invoked' > ${JSON.stringify(invokedFile)}
       CLAUDE_PLUGIN_ROOT: pluginRoot,
       PATH: `${launcherBin}:${realBin}:${process.env.PATH}`,
       ZH_CN_REAL_CLAUDE: realClaude,
+      ZH_CN_LAUNCHER_BIN_DIR: launcherBin,
     },
     input: "\n",
     encoding: "utf8",
@@ -663,7 +685,7 @@ printf '1'
   );
   fs.chmodSync(path.join(pluginRoot, "patch-cli.sh"), 0o755);
 
-  fs.writeFileSync(fakeBinary, "// Version: 2.1.124\nLATEST\n");
+  fs.writeFileSync(fakeBinary, "// Version: 2.1.130\nLATEST\n");
   fs.chmodSync(fakeBinary, 0o755);
   fs.writeFileSync(markerFile, "2.1.112|stale-revision\n");
   fs.symlinkSync(fakeBinary, path.join(fakeBin, "claude"));

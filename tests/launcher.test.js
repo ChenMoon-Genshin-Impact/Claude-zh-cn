@@ -73,6 +73,7 @@ function createLauncherContext() {
     "bash",
     "env",
     "node",
+    "npm",
     "cp",
     "mkdir",
     "find",

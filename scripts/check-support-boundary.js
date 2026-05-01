@@ -62,12 +62,13 @@ function isNegatedBoundaryLine(line) {
 
 function isAllowedNativeExperimentalLine(line) {
   const mentionsMacos = /macOS|darwin/i.test(line);
+  const mentionsLinux = /linux/i.test(line);
   const mentionsNative = /native|原生|二进制|binary/i.test(line);
   const experimental = /experimental|实验/i.test(line);
   const stableClaim = /\bstable\b|稳定支持|stable CLI Patch/i.test(line);
   const latestClaim = /\blatest\b|最新版|最新版本/i.test(line);
 
-  return mentionsMacos && mentionsNative && experimental && !stableClaim && !latestClaim;
+  return (mentionsMacos || mentionsLinux) && mentionsNative && experimental && !stableClaim && !latestClaim;
 }
 
 function findSupportClaim(line) {
@@ -185,10 +186,11 @@ function addSupportEntryFindings(findings, node, relative, pathParts) {
     const pathText = entryPath.toLowerCase();
     const isMacosInstaller = pathText.includes("macosofficialinstaller");
     const isMacosNativeExperimental = pathText.includes("macosnativeexperimental");
+    const isLinuxNativeExperimental = pathText.includes("linuxnativeexperimental");
     const isWindowsNative =
       pathText.includes("windows") &&
       (pathText.includes("native") || pathText.includes("exe") || pathText.includes("binary") || pathText.includes("official"));
-    const ceilingLimit = isMacosNativeExperimental ? null : STABLE_CEILING;
+    const ceilingLimit = (isMacosNativeExperimental || isLinuxNativeExperimental) ? null : STABLE_CEILING;
 
     if (isWindowsNative && node.unsupported !== true) {
       findings.push({
@@ -267,7 +269,7 @@ function buildFindings(repoRoot) {
 function printOk() {
   console.log(`support-boundary-guard: OK`);
   console.log(`stable CLI Patch: ${STABLE_RANGE}`);
-  console.log(`native CLI Patch: only explicitly verified macOS experimental versions; no latest stable claim`);
+  console.log(`native CLI Patch: only explicitly verified macOS/Linux experimental versions; no latest stable claim`);
 }
 
 function printFail(findings) {
