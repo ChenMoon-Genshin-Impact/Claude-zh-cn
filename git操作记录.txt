@@ -1,0 +1,35 @@
+初始化仓库（如未初始化）
+git init
+
+
+配置远程地址
+	查看远程：
+	git remote -v
+	修改远程地址：
+	git remote set-url origin https://github.com/chenmoon1111/claude-Code-zh-cn-v1.git
+添加文件到暂存区
+git add .
+
+提交更改
+git commit -m "your commit message"
+
+处理远程已有内容
+如果远程已有初始 commit，先拉取合并：
+git pull origin main --allow-unrelated-histories
+解决冲突后再次提交。
+
+推送到远程
+git push -u origin main
+跨平台换行符统一
+
+在仓库根目录添加 .gitattributes 文件：
+gitattributes
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.sh text eol=lf
+*.md text eol=lf
+
+提交并推送：
+git add .gitattributes
+git commit -m "Add .gitattributes for cross-platform consistency"
+git push origin main
