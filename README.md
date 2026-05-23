@@ -6,9 +6,9 @@
 
 让终端里的 AI 编程助手说中文 🇨🇳
 
-[![GitHub](https://img.shields.io/badge/GitHub-KongBai1145%2Fclaude--code--zh--cn-blue?logo=github)](https://github.com/KongBai1145/claude-code-zh-cn)
+[![GitHub](https://img.shields.io/badge/GitHub-KongBai1145%2Fclaude--code--zh--cn-blue?logo=github)](https://github.com/ChenMoon-Genshin-Impact/Claude-zh-cn)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Version](https://img.shields.io/github/v/tag/KongBai1145/claude-code-zh-cn?label=Version&color=blue)](https://github.com/KongBai1145/claude-code-zh-cn/releases)
+[![Version](https://img.shields.io/github/v/tag/ChenMoon-Genshin-Impact/Claude-zh-cn?label=Version&color=blue)](https://github.com/ChenMoon-Genshin-Impact/Claude-zh-cn/releases)
 
 **一键安装 · 自动更新 · 卸载不丢配置**
 
@@ -33,7 +33,7 @@
 ## 一键安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/KongBai1145/claude-code-zh-cn/main/quick-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ChenMoon-Genshin-Impact/Claude-zh-cn/main/quick-install.sh | bash
 ```
 
 > 安装脚本会自动检测你的系统和 Claude Code 版本，无需手动选择。
@@ -75,7 +75,7 @@ curl -fsSL https://raw.githubusercontent.com/KongBai1145/claude-code-zh-cn/main/
 <summary>macOS / Linux</summary>
 
 ```bash
-git clone https://github.com/KongBai1145/claude-code-zh-cn.git
+git clone https://github.com/ChenMoon-Genshin-Impact/Claude-zh-cn.git
 cd claude-code-zh-cn
 ./install.sh
 ```
@@ -85,7 +85,7 @@ cd claude-code-zh-cn
 <summary>Windows PowerShell</summary>
 
 ```powershell
-git clone https://github.com/KongBai1145/claude-code-zh-cn.git
+git clone https://github.com/ChenMoon-Genshin-Impact/Claude-zh-cn.git
 cd claude-code-zh-cn
 powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1
 ```
@@ -180,7 +180,7 @@ macOS、Linux、Windows（PowerShell 或 WSL）。需要 Node.js。
 欢迎 PR！
 
 - 翻译改进 → 编辑 `tips/zh-CN.json` 或 `verbs/zh-CN.json`
-- Bug 反馈 → [提交 Issue](https://github.com/KongBai1145/claude-code-zh-cn/issues)
+- Bug 反馈 → [提交 Issue](https://github.com/ChenMoon-Genshin-Impact/Claude-zh-cn/issues)
 
 ---
 
