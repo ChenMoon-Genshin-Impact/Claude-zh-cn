@@ -33,17 +33,61 @@ is_supported_native_version() {
         return 1
     fi
 
-    node - "$support_file" "$version" <<'NODE'
+    local os_kind
+    case "$(uname -s 2>/dev/null || echo unknown)" in
+        Darwin) os_kind="darwin" ;;
+        Linux) os_kind="linux" ;;
+        MINGW*|MSYS*|CYGWIN*|Windows_NT) os_kind="win32" ;;
+        *) os_kind="unknown" ;;
+    esac
+
+    node - "$support_file" "$version" "$os_kind" <<'NODE'
 const fs = require("fs");
 const file = process.argv[2];
 const version = process.argv[3];
+const osKind = process.argv[4];
 const data = JSON.parse(fs.readFileSync(file, "utf8"));
-const versions = [
-  ...(data.macosNativeOfficialInstallerExperimental?.versions || []),
-  ...(data.macosNativeExperimental?.versions || []),
-  ...(data.linuxNativeExperimental?.versions || []),
-];
-process.exit(versions.includes(version) ? 0 : 1);
+
+function parse(v) {
+  if (!v || typeof v !== "string") return null;
+  const m = /^(\d+)\.(\d+)\.(\d+)/.exec(v);
+  return m ? [+m[1], +m[2], +m[3]] : null;
+}
+
+function cmp(a, b) {
+  for (let i = 0; i < 3; i++) {
+    if (a[i] !== b[i]) return a[i] - b[i];
+  }
+  return 0;
+}
+
+const groups = {
+  darwin: [data.macosNativeOfficialInstallerExperimental, data.macosNativeExperimental],
+  linux: [data.linuxNativeExperimental],
+  win32: [data.windowsNativeExperimental],
+};
+
+const entries = (groups[osKind] || [
+  data.macosNativeOfficialInstallerExperimental,
+  data.macosNativeExperimental,
+  data.linuxNativeExperimental,
+  data.windowsNativeExperimental,
+]).filter(Boolean);
+
+const cur = parse(version);
+if (!cur) process.exit(1);
+
+for (const entry of entries) {
+  const floor = parse(entry.floor);
+  if (!floor) continue;
+  if (cmp(cur, floor) < 0) continue;
+  // floor-only 模式：>= floor 即视为支持，无需在 versions 列表里
+  // 兼容老逻辑：excluded 列表里的版本仍然跳过
+  if (Array.isArray(entry.excluded) && entry.excluded.includes(version)) continue;
+  // ceiling 不再硬截断（保留字段仅供参考）
+  process.exit(0);
+}
+process.exit(1);
 NODE
 }
 

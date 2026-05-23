@@ -355,8 +355,71 @@ function initial-patch {
             }
         }
         "native-bun" {
-            Write-CN "检测到原生二进制安装；Windows PE 二进制暂不支持 patch，仅 macOS 支持" Yellow
-            $script:CliPatchStatusSummary = "已跳过（Windows PE 二进制 patch 暂未支持）"
+            Write-Host ""
+            Write-CN "正在 patch Windows PE 二进制..." Blue
+            $bunBinaryIo = Join-Path $PluginSrc "bun-binary-io.js"
+
+            # 检查 node-lief
+            $liefCheck = node $bunBinaryIo check-deps 2>&1
+            if ($liefCheck -ne "ok") {
+                Write-CN "node-lief 未安装，正在安装..." Yellow
+                npm install -g node-lief 2>&1 | Out-Null
+                $liefCheck2 = node $bunBinaryIo check-deps 2>&1
+                if ($liefCheck2 -ne "ok") {
+                    Write-CN "node-lief 安装失败，跳过 PE 二进制 patch" Red
+                    $script:CliPatchStatusSummary = "已跳过（node-lief 安装失败）"
+                    return
+                }
+            }
+
+            # 提取 JavaScript
+            $tmpJs = "$TmpDir\claude-cli-$PID.js"
+            $extractResult = node $bunBinaryIo extract $target $tmpJs 2>&1
+            if ($extractResult -ne "ok") {
+                Write-CN "提取失败: $extractResult" Red
+                $script:CliPatchStatusSummary = "已跳过（提取失败）"
+                return
+            }
+            Write-CN "已提取 JavaScript 代码" Green
+
+            # Patch JavaScript
+            $patchScript = Join-Path $PluginSrc "patch-cli.js"
+            $translationsFile = Join-Path $PluginSrc "cli-translations.json"
+            $patchCount = node $patchScript $tmpJs $translationsFile 2>$null
+            if (-not $patchCount -or [int]$patchCount -eq 0) {
+                Write-CN "patch 失败或无改动" Yellow
+                Remove-Item $tmpJs -Force -ErrorAction SilentlyContinue
+                $script:CliPatchStatusSummary = "已跳过（patch 失败或无改动）"
+                return
+            }
+            Write-CN "已 patch JavaScript（${patchCount} 处硬编码文字）" Green
+
+            # 备份原始二进制
+            $backupFile = "$target.zh-cn-backup"
+            if (-not (Test-Path $backupFile)) {
+                Copy-Item $target $backupFile -Force
+                Write-CN "已备份原始二进制" Green
+            }
+
+            # 重打包
+            $repackResult = node $bunBinaryIo repack $target $tmpJs 2>&1
+            Remove-Item $tmpJs -Force -ErrorAction SilentlyContinue
+            if ($repackResult -ne "ok") {
+                Write-CN "重打包失败: $repackResult" Red
+                $script:CliPatchStatusSummary = "已跳过（重打包失败）"
+                return
+            }
+            Write-CN "已重打包 PE 二进制" Green
+
+            $patchRevision = get-patch-revision $PluginDst
+            $binaryHash = (Get-FileHash $backupFile -Algorithm SHA256).Hash.Substring(0, 16)
+            $version = node $bunBinaryIo version $backupFile 2>&1
+            if ($patchRevision -and $version) {
+                "native|${version}|${binaryHash}|${patchRevision}" | Out-File -FilePath $MarkerFile -Encoding ascii -NoNewline
+            }
+
+            $script:CliPatchStatusSummary = "PE 二进制中文化（${patchCount} 处硬编码文字）"
+            $script:CliPatchStatusOk = $true
         }
         "unknown" {
             Write-CN "当前安装方式暂不支持 CLI Patch，已跳过此步骤" Yellow

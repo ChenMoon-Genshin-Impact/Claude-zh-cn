@@ -15,23 +15,156 @@ try {
 # Match and translate
 TRANSLATED=""
 case "$MESSAGE" in
+    # 速率和限制
     *"Rate limited"*)
         TRANSLATED="请求频率受限，请稍后再试"
         ;;
     *"Token limit reached"*)
         TRANSLATED="Token 用量已达上限"
         ;;
+    *"Usage limit"*)
+        TRANSLATED="使用额度已达上限"
+        ;;
+    *"Quota exceeded"*)
+        TRANSLATED="配额已超出"
+        ;;
+
+    # 会话和上下文
     *"Session expired"*)
         TRANSLATED="会话已过期"
         ;;
     *"Context window"*)
         TRANSLATED="上下文窗口即将用尽，建议使用 /compact 压缩"
         ;;
-    *"Usage limit"*)
-        TRANSLATED="使用额度已达上限"
-        ;;
     *"Auto-compact"*)
         TRANSLATED="正在自动压缩对话历史..."
+        ;;
+    *"Context compacted"*)
+        TRANSLATED="对话历史已压缩"
+        ;;
+
+    # 网络错误
+    *"Connection refused"*)
+        TRANSLATED="连接被拒绝，请检查网络连接"
+        ;;
+    *"Connection timeout"*|*"Timeout"*)
+        TRANSLATED="连接超时，请稍后重试"
+        ;;
+    *"Network error"*)
+        TRANSLATED="网络错误，请检查网络连接"
+        ;;
+    *"DNS"*"failed"*)
+        TRANSLATED="DNS 解析失败"
+        ;;
+    *"Host not found"*)
+        TRANSLATED="主机未找到"
+        ;;
+
+    # 认证和权限
+    *"Authentication failed"*|*"Unauthorized"*)
+        TRANSLATED="认证失败，请检查凭据"
+        ;;
+    *"Permission denied"*)
+        TRANSLATED="权限被拒绝"
+        ;;
+    *"Access denied"*)
+        TRANSLATED="访问被拒绝"
+        ;;
+    *"Forbidden"*)
+        TRANSLATED="禁止访问"
+        ;;
+
+    # 文件操作
+    *"File not found"*)
+        TRANSLATED="文件未找到"
+        ;;
+    *"Directory not found"*)
+        TRANSLATED="目录未找到"
+        ;;
+    *"File already exists"*)
+        TRANSLATED="文件已存在"
+        ;;
+    *"Read-only"*)
+        TRANSLATED="只读文件系统"
+        ;;
+    *"Disk full"*)
+        TRANSLATED="磁盘空间不足"
+        ;;
+
+    # Git 操作
+    *"Merge conflict"*)
+        TRANSLATED="合并冲突，需要手动解决"
+        ;;
+    *"Nothing to commit"*)
+        TRANSLATED="没有需要提交的内容"
+        ;;
+    *"Branch not found"*)
+        TRANSLATED="分支未找到"
+        ;;
+    *"Remote not found"*)
+        TRANSLATED="远程仓库未找到"
+        ;;
+
+    # 包管理
+    *"Package not found"*)
+        TRANSLATED="包未找到"
+        ;;
+    *"Dependency error"*)
+        TRANSLATED="依赖错误"
+        ;;
+    *"Installation failed"*)
+        TRANSLATED="安装失败"
+        ;;
+    *"Version conflict"*)
+        TRANSLATED="版本冲突"
+        ;;
+
+    # 构建和编译
+    *"Build failed"*)
+        TRANSLATED="构建失败"
+        ;;
+    *"Compilation error"*)
+        TRANSLATED="编译错误"
+        ;;
+    *"Syntax error"*)
+        TRANSLATED="语法错误"
+        ;;
+    *"Type error"*)
+        TRANSLATED="类型错误"
+        ;;
+
+    # 服务器错误
+    *"Internal server error"*|*"500"*)
+        TRANSLATED="服务器内部错误"
+        ;;
+    *"Bad gateway"*|*"502"*)
+        TRANSLATED="网关错误"
+        ;;
+    *"Service unavailable"*|*"503"*)
+        TRANSLATED="服务不可用"
+        ;;
+    *"Gateway timeout"*|*"504"*)
+        TRANSLATED="网关超时"
+        ;;
+
+    # 其他常见错误
+    *"Command not found"*)
+        TRANSLATED="命令未找到"
+        ;;
+    *"Command failed"*)
+        TRANSLATED="命令执行失败"
+        ;;
+    *"Out of memory"*)
+        TRANSLATED="内存不足"
+        ;;
+    *"Invalid argument"*)
+        TRANSLATED="无效参数"
+        ;;
+    *"Parse error"*)
+        TRANSLATED="解析错误"
+        ;;
+    *"Validation failed"*)
+        TRANSLATED="验证失败"
         ;;
 esac
 
