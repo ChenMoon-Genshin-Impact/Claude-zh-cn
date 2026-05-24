@@ -19,6 +19,7 @@ git pull origin main --allow-unrelated-histories
 解决冲突后再次提交。
 
 推送到远程
+git branch -M main
 git push -u origin main
 跨平台换行符统一
 
