@@ -186,7 +186,7 @@
     },
     "windowsNpmPowerShell": {
       "stable": {
-        "floor": "2.1.92",
+        "floor": "2.1.98",
         "ceiling": "2.1.112",
         "representatives": [],
         "notes": "新增 PowerShell 安装脚本（install.ps1）；适用于旧 npm cli.js 形态，CLI Patch 可用；Windows 上 session-start 二层兜底（launcher 暂不实现启动前自修复）。"
