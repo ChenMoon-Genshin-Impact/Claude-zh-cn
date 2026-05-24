@@ -113,9 +113,10 @@ function detectInstallation(claudeCmd) {
   let realPath;
   try { realPath = fs.realpathSync(claudeCmd); } catch { return "unknown"; }
 
-  // 2. 先判真实目标本身是不是 Bun 二进制
+  // 2. 先判真实目标本身是不是 Bun 二进制（Codex 二审 #1）
+  //    PE 格式暂不支持 repack，跳过 CLI Patch（设置和 Hook 仍生效）
   const format = detectBinaryFormat(realPath);
-  if ((format === "MachO64" || format === "MachO32" || format === "ELF" || format === "PE") && hasBunTrailer(realPath)) {
+  if ((format === "MachO64" || format === "MachO32" || format === "ELF") && hasBunTrailer(realPath)) {
     return "native-bun:" + realPath;
   }
 
@@ -133,7 +134,7 @@ function detectInstallation(claudeCmd) {
     "node_modules/@anthropic-ai/claude-code/bin/claude.exe");
   if (fs.existsSync(npmExe)) {
     const exeFormat = detectBinaryFormat(npmExe);
-    if ((exeFormat === "MachO64" || exeFormat === "MachO32" || exeFormat === "ELF" || exeFormat === "PE") && hasBunTrailer(npmExe)) {
+    if ((exeFormat === "MachO64" || exeFormat === "MachO32" || exeFormat === "ELF") && hasBunTrailer(npmExe)) {
       return "native-bun:" + npmExe;
     }
   }
@@ -259,18 +260,14 @@ function extractBunDataFromSection(sectionData) {
 
   let headerSize, bunDataSize;
 
-  // PE section 可能有更大的物理大小（对齐），所以放宽容差到 64KB
-  const tolerance = 65536;
-
-  if (sectionData.length >= 8 && expectedLengthU64 <= sectionData.length && expectedLengthU64 >= sectionData.length - tolerance) {
+  if (sectionData.length >= 8 && expectedLengthU64 <= sectionData.length && expectedLengthU64 >= sectionData.length - 4096) {
     headerSize = 8;
     bunDataSize = bunDataSizeU64;
-  } else if (expectedLengthU32 <= sectionData.length && expectedLengthU32 >= sectionData.length - tolerance) {
+  } else if (expectedLengthU32 <= sectionData.length && expectedLengthU32 >= sectionData.length - 4096) {
     headerSize = 4;
     bunDataSize = bunDataSizeU32;
   } else {
-    const debugInfo = `sectionData.length=${sectionData.length}, bunDataSizeU32=${bunDataSizeU32}, expectedLengthU32=${expectedLengthU32}, bunDataSizeU64=${bunDataSizeU64}, expectedLengthU64=${expectedLengthU64}`;
-    throw new Error(`Cannot determine section header format: ${debugInfo}`);
+    throw new Error("Cannot determine section header format");
   }
 
   const bunDataContent = sectionData.subarray(headerSize, headerSize + bunDataSize);
@@ -304,18 +301,6 @@ function extractFromELF(LIEF, binaryPath) {
   return { ...extractBunDataFromSection(bunSection.content), elfSectionOffset: Number(bunSection.fileOffset) };
 }
 
-function extractFromPE(LIEF, binaryPath) {
-  LIEF.logging.disable();
-  const binary = LIEF.parse(binaryPath);
-
-  const bunSection = binary.getSection(".bun");
-  if (!bunSection) throw new Error(".bun section not found");
-
-  // PE section 使用 pointerto_raw_data 作为文件偏移量
-  const fileOffset = Number(bunSection.pointerto_raw_data || bunSection.offset);
-  return { ...extractBunDataFromSection(bunSection.content), peSectionOffset: fileOffset };
-}
-
 function extractFromBinary(LIEF, binaryPath) {
   const format = detectBinaryFormat(binaryPath);
   if (format === "MachO64" || format === "MachO32") {
@@ -323,9 +308,6 @@ function extractFromBinary(LIEF, binaryPath) {
   }
   if (format === "ELF") {
     return extractFromELF(LIEF, binaryPath);
-  }
-  if (format === "PE") {
-    return extractFromPE(LIEF, binaryPath);
   }
   throw new Error(`Unsupported binary format: ${format}`);
 }
@@ -578,64 +560,6 @@ function repackELF(binPath, newBunBuffer, elfSectionOffset, sectionHeaderSize) {
   }
 }
 
-function repackPE(binPath, newBunBuffer, peSectionOffset, sectionHeaderSize) {
-  const newSectionData = buildSectionData(newBunBuffer, sectionHeaderSize);
-
-  // 读取原始 section 大小（优先从备份读取，避免 EPERM）
-  const backupPath = binPath + ".zh-cn-backup";
-  const readSource = fs.existsSync(backupPath) ? backupPath : binPath;
-  const fd = fs.openSync(readSource, "r");
-  const origHeader = Buffer.alloc(sectionHeaderSize);
-  fs.readSync(fd, origHeader, 0, sectionHeaderSize, peSectionOffset);
-  fs.closeSync(fd);
-
-  const origDataSize = sectionHeaderSize === 8
-    ? Number(origHeader.readBigUInt64LE(0))
-    : origHeader.readUInt32LE(0);
-  const origSectionSize = sectionHeaderSize + origDataSize;
-
-  if (newSectionData.length > origSectionSize) {
-    throw new Error(
-      `New bun data (${newSectionData.length} bytes) exceeds PE .bun section capacity (${origSectionSize} bytes). ` +
-      `Size increase of ${newSectionData.length - origSectionSize} bytes cannot be accommodated.`
-    );
-  }
-
-  // 从备份复制到临时文件再写入（避免 EPERM，原始二进制可能正在运行）
-  const tmpPath = binPath + ".zh-cn-tmp";
-  fs.copyFileSync(readSource, tmpPath);
-  try {
-    const fd2 = fs.openSync(tmpPath, "r+");
-    try {
-      // 只写入新数据，不填充额外的零（PE section 有自己的物理大小对齐）
-      fs.writeSync(fd2, newSectionData, 0, newSectionData.length, peSectionOffset);
-    } finally {
-      fs.closeSync(fd2);
-    }
-
-    // 恢复原始文件权限
-    const origStat = fs.statSync(readSource);
-    fs.chmodSync(tmpPath, origStat.mode);
-
-    // 原子替换（Windows 需要先删除目标文件）
-    try {
-      if (fs.existsSync(binPath)) fs.unlinkSync(binPath);
-    } catch (unlinkError) {
-      if (unlinkError.code === "EPERM" || unlinkError.code === "EBUSY") {
-        throw new Error("Cannot update the Claude executable while it is running. Please close all Claude instances and try again.");
-      }
-      throw unlinkError;
-    }
-    fs.renameSync(tmpPath, binPath);
-  } catch (error) {
-    try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch {}
-    if (error && (error.code === "ETXTBSY" || error.code === "EBUSY" || error.code === "EPERM")) {
-      throw new Error("Cannot update the Claude executable while it is running. Please close all Claude instances and try again.");
-    }
-    throw error;
-  }
-}
-
 // ============================================================================
 // CLI 子命令实现
 // ============================================================================
@@ -700,9 +624,6 @@ function cmdRepack() {
   } else if (format === "ELF") {
     const elfSectionOffset = extracted.elfSectionOffset;
     repackELF(binaryPath, newBuffer, elfSectionOffset, sectionHeaderSize);
-  } else if (format === "PE") {
-    const peSectionOffset = extracted.peSectionOffset;
-    repackPE(binaryPath, newBuffer, peSectionOffset, sectionHeaderSize);
   } else {
     process.stderr.write(`Error: unsupported binary format: ${format}\n`);
     process.exit(1);
