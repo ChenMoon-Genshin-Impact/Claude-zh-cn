@@ -64,14 +64,13 @@ function cmp(a, b) {
 const groups = {
   darwin: [data.macosNativeOfficialInstallerExperimental, data.macosNativeExperimental],
   linux: [data.linuxNativeExperimental],
-  win32: [data.windowsNativeExperimental],
+  win32: [],
 };
 
 const entries = (groups[osKind] || [
   data.macosNativeOfficialInstallerExperimental,
   data.macosNativeExperimental,
   data.linuxNativeExperimental,
-  data.windowsNativeExperimental,
 ]).filter(Boolean);
 
 const cur = parse(version);
